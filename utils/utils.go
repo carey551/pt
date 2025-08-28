@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"sort"
 	"strings"
@@ -94,6 +95,7 @@ func ReadYAML(filePath string, result interface{}) error {
 func WriteYAML(filePath string, data interface{}) error {
 	// 将结构体编码为 YAML 数据
 	yamlData, err := yaml.Marshal(data)
+	// fmt.Printf("文件路径%s,写入的文件内容%v", filePath, yamlData)
 	if err != nil {
 		return fmt.Errorf("编码 YAML 数据失败: %w", err)
 	}
@@ -125,4 +127,19 @@ func HandlerMap(strResbody string, str string) (string, error) {
 		return "token 不是字符串或不存在", err
 	}
 	return token, nil
+}
+
+// 生成随机浏览器指纹
+func GenerateCryptoRandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	bytes := make([]byte, length)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return ""
+	}
+	for i, b := range bytes {
+		bytes[i] = charset[b%byte(len(charset))]
+	}
+	fmt.Println("本次指纹", string(bytes))
+	return string(bytes)
 }

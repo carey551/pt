@@ -68,9 +68,10 @@ func Login() error {
 		fmt.Println(error)
 		return error
 	}
-	fmt.Printf("登录结果%v", response.Msg)
+	// fmt.Printf("登录结果%v", response)
 	token, err := utils.HandlerMap(strResbody, "token")
 	if err != nil {
+
 		return err
 	}
 	config := Config{}
@@ -79,6 +80,7 @@ func Login() error {
 	if errs != nil {
 		// fmt.Printf("token写入失败%v", errs)
 		err := errors.New("token写入失败")
+		fmt.Printf("%s", errs)
 		return err
 	}
 	fmt.Printf("token写入成功.......\n")

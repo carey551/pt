@@ -6,8 +6,7 @@ import (
 )
 
 var (
-	Token_addr_yaml_local string = "C:\\Users\\Lenovo\\Desktop\\gowork\\src\\project\\yaml\\token.yaml"
-	Token_addr_yaml_ar    string = "C:\\Users\\ar_wensi\\Desktop\\go\\project\\yaml\\token.yaml"
+	Token_addr_yaml_local = "./yaml/token.yaml"
 )
 
 // 获取yaml中的token
