@@ -24,7 +24,7 @@ type AddUserStruct struct {
 }
 
 // 发送添加用户的请求
-func AddUserRequest() {
+func AddUserRequest(userAmount string) {
 	//初始化这些添加用户的结构体
 	api := "/api/Users/AddUsers"
 	requesPayload := make(map[string]interface{})
@@ -32,7 +32,7 @@ func AddUserRequest() {
 	// 构建 addUserList 数组
 	addUserList := []interface{}{
 		map[string]interface{}{
-			"account":      "917131997121",
+			"account":      userAmount,
 			"userType":     0,
 			"password":     "qwer1234",
 			"remark":       "",
@@ -60,7 +60,7 @@ func AddUserRequest() {
 		return
 	}
 	result := utils.Unmarshal(string(responBody))
-
+	fmt.Printf("添加用户的请求结果%v", result)
 	if len(result["data"].([]interface{})) == 0 {
 		fmt.Printf("添加成功%v", result["data"])
 	} else {

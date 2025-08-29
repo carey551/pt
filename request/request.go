@@ -43,14 +43,6 @@ func PostRequest(payload map[string]interface{}, api string, args ...map[string]
 	}
 	// 设置请求头
 	if len(args) > 0 {
-		// for key, value := range args {
-		// 	strValue, ok := value.(string)
-		// 	if ok {
-		// 		req.Header.Set(string(key), strValue)
-		// 	} else {
-		// 		return nil, fmt.Errorf("header %s 的值不是字符串类型，实际类型: %T", key, value)
-		// 	}
-		// }
 		// 直接访问 token
 		if authorization, ok := args[0]["Authorization"].(string); ok {
 			req.Header.Set("Authorization", authorization)
@@ -79,30 +71,36 @@ func PostRequest(payload map[string]interface{}, api string, args ...map[string]
 	}
 
 	defer resp.Body.Close()
-	if resp.StatusCode == 200 {
-		//获取相应的内容
-		respBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatalf("读取响应失败：%v", err)
-		}
-		return respBody, nil
-
-	} else if resp.StatusCode >= 300 && resp.StatusCode < 400 {
-		//
-		return nil, nil
-	} else if resp.StatusCode >= 400 && resp.StatusCode < 500 {
-		//需要身份验证,或者需要
-		return nil, nil
-	} else {
-		err := errors.New("状态码不是200~~或者是服务器错误~~~")
-		return nil, err
-	}
-
+	return handlerCode(resp)
 }
 
 // get请求
-func GetRequest() {
+/**
+url 请求地址
+api 接口
+*/
+func GetRequest(url, api string) ([]byte, error) {
+	urlapi := url + api
+	// 创建 GET 请求
+	req, err := http.NewRequest("GET", urlapi, nil)
+	if err != nil {
+		log.Fatalf("创建请求失败: %v", err)
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36")
+	req.Header.Set("Referer", "https://h5.wmgametransit.com/WinGo/WinGo_5M?Lang=en&Skin=Classic&SkinColor=Default&Token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJUb2tlblR5cGUiOiJBY2Nlc3NfVG9rZW4iLCJUZW5hbnRJZCI6IjMwMDMiLCJVc2VySWQiOiIzMDAzMDAwMTczNjMxNyIsIkFnZW50Q29kZSI6IjMwMDMwMSIsIlRlbmFudEFjY291bnQiOiIxNzM2MzE3IiwiTG9naW5JUCI6IjE3NS4xNTcuODYuMjAiLCJMb2dpblRpbWUiOiIxNzU2NDgxMzQxMzUxIiwiU3lzQ3VycmVuY3kiOiJJTlIiLCJTeXNMYW5ndWFnZSI6ImVuIiwiRGV2aWNlVHlwZSI6IlBDIiwiTG90dGVyeUxpbWl0R3JvdXBOdW0iOiIwIiwiVXNlclR5cGUiOiIwIiwibmJmIjoxNzU2NDgxMzQxLCJleHAiOjE3NTY1Njc3NDEsImlzcyI6Imp3dElzc3VlciIsImF1ZCI6ImxvdHRlcnlUaWNrZXQifQ.mtB4BS7ZpIp0xPItV-he2tISkDKC0wzMp2mWAvrfoys&RedirectUrl=https%3A%2F%2Fsit-plath5-y1.mggametransit.com%2Fgame%2Fcategory%3FcategoryCode%3DC202505280608510046&Beck=0")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Connection", "keep-alive")
 
+	// 获取请求句柄
+	client := checkHttp2()
+	resp, err := client.Do(req)
+	if err != nil {
+		// fmt.Println("发送get请求失败")
+		err := errors.New("发送get请求失败")
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return handlerCode(resp)
 }
 
 // 验证请求的协议是不是http/2
@@ -213,4 +211,26 @@ func PostRequestY1(payload map[string]interface{}, api string, args ...map[strin
 		return nil, err
 	}
 
+}
+
+// 响应码的处理
+func handlerCode(resp *http.Response) ([]byte, error) {
+	if resp.StatusCode == 200 {
+		//获取相应的内容
+		respBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatalf("读取响应失败：%v", err)
+		}
+		return respBody, nil
+
+	} else if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+		//
+		return nil, nil
+	} else if resp.StatusCode >= 400 && resp.StatusCode < 500 {
+		//需要身份验证,或者需要
+		return nil, nil
+	} else {
+		err := errors.New("状态码不是200~~或者是服务器错误~~~")
+		return nil, err
+	}
 }

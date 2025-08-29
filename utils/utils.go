@@ -112,6 +112,7 @@ func WriteYAML(filePath string, data interface{}) error {
 func HandlerMap(strResbody string, str string) (string, error) {
 	var result map[string]interface{}
 	result = Unmarshal(strResbody)
+	fmt.Printf("解析结果%v", result)
 	innerMap, ok := result["data"].(map[string]interface{})
 	if !ok {
 		// fmt.Println("data 不存在")
