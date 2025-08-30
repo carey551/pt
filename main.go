@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"project/betApi"
+	_ "project/betApi"
+	"project/common"
 	_ "project/paymoneyapi"
 	_ "project/userApi"
 )
@@ -17,14 +18,25 @@ func run() {
 	// 	return
 	// }
 	// paymoneyapi.ManualRecharge(userid, 667, 0) // 用户充值
-	// userApi.UserloginY1(userAmount, "qwer1234")  // 前台登录
-	isBet, result := betApi.IsBet()
-	if isBet && result != "-1" {
-		// 可以投注
-		fmt.Println("可以投注")
-	} else {
-		return
-	}
+	// result,err := userApi.UserloginY1(userAmount, "qwer1234")  // 前台登录 返回token值，后面的请求都需要这个token
+	// if err != nil {
+	// 	fmt.Println(result)
+	// 	return
+	// }
+	// tokenMap := map[string]string{
+	// 	"Authorization":result,
+	// }
+	// // 是否可以投注
+	// isBet, result := betApi.IsBet()
+	// if isBet && result != "-1" {
+	// 	// 可以投注
+	// 	fmt.Println("可以投注")
+
+	// } else {
+	// 	return
+	// }
+	var config common.CofingURL
+	fmt.Print(config.ConfigFile().ADMIN_URL)
 }
 
 func main() {

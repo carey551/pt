@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"project/request"
+	"project/userApi"
 	"project/utils"
 )
 
@@ -21,7 +22,7 @@ type userloginY1 struct {
 }
 
 // 账号，密码 登录
-func UserloginY1(username, password string) {
+func UserloginY1(username, password string) (string, error) {
 	api := "/api/Home/Login"
 	userloginInit := userloginY1{
 		UserName:    username,
@@ -52,20 +53,21 @@ func UserloginY1(username, password string) {
 	resp, err := request.PostRequestY1(userloginMap, api)
 	if err != nil {
 		fmt.Printf("输入账号和密码登录的post请求失败")
-		return
+		return "输入账号和密码登录的post请求失败", err
 	}
 
 	strResbody := string(resp)
-	var response Response
+	var response userApi.Response
 	error := json.Unmarshal([]byte(strResbody), &response)
 	if error != nil {
 		fmt.Println(error)
-		return
+		return "登录请求失败", error
 	}
 	// fmt.Printf("登录结果%v", response)
 	token, err := utils.HandlerMap(strResbody, "token")
 	if err != nil {
-		return
+		return "寻找token失败", err
 	}
 	fmt.Printf("token==>%v", token)
+	return token, nil
 }

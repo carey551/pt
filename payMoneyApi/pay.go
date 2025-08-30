@@ -1,4 +1,4 @@
-package paymoneyapi
+package payMoneyapi
 
 import (
 	"fmt"

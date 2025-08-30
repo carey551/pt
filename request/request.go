@@ -234,3 +234,105 @@ func handlerCode(resp *http.Response) ([]byte, error) {
 		return nil, err
 	}
 }
+
+/*
+*
+paylaod 请求参数 map[string]interface{}
+base_url 请求地址
+api 接口地址
+args[0] 添加Authorization  map[string]interface{}
+*/
+func PostRequestCofig(payload map[string]interface{}, base_url, api string, args ...map[string]interface{}) ([]byte, error) {
+	url := base_url + api
+	// 判断传进来的paylaod是否有签名，没有就添加上
+	_, exists := payload["signature"]
+	if !exists {
+		payload["signature"] = ""
+	}
+	verfiyp := ""
+	signature := utils.GetSignature(payload, &verfiyp)
+	if signature == "" {
+		fmt.Println("utils的签名是空的", signature)
+	}
+
+	payload["signature"] = signature
+	// fmt.Printf("请求的payload%v\n", payload)
+	//将请求数据转换成json
+	body, err := json.Marshal(payload)
+	if err != nil {
+		log.Fatalf(" json 编码失败:%v", err)
+	}
+	// 发送post请求
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		log.Fatalf("请求失败：%v", err)
+	}
+	// 设置请求头
+	if len(args) > 0 {
+		// // 直接访问 token
+		// if authorization, ok := args[0]["Authorization"].(string); ok {
+		// 	req.Header.Set("Authorization", authorization)
+		// } else {
+		// 	fmt.Println("错误: Authorization 不存在或不是字符串")
+		// }
+		// // args[1] 主要是传一些请求头
+		// if len(args[1]) > 0 {
+
+		// }
+		setHeaders(req, args[0])
+	}
+	req.Header.Set(
+		"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+	)
+	req.Header.Set("Content-Type", "application/json")
+	//本次请求的请求头
+	// for key, values := range req.Header {
+	// 	fmt.Printf("本次请求的请求头%s: %v\n", key, values)
+	// }
+
+	client := checkHttp2()
+	//发送请求
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalf("请求失败： %v", err)
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	if resp.StatusCode == 200 {
+		//获取相应的内容
+		respBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatalf("读取响应失败：%v", err)
+		}
+		return respBody, nil
+
+	} else if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+		//
+		return nil, nil
+	} else if resp.StatusCode >= 400 && resp.StatusCode < 500 {
+		//需要身份验证,或者需要
+		return nil, nil
+	} else {
+		err := errors.New("状态码不是200~~或者是服务器错误~~~")
+		return nil, err
+	}
+
+}
+
+// 设置请求头
+func setHeaders(req *http.Request, headers map[string]interface{}) {
+	for key, value := range headers {
+		// 将 interface{} 转换为 string
+		var headerValue string
+		switch v := value.(type) {
+		case string:
+			headerValue = v
+		case fmt.Stringer:
+			headerValue = v.String()
+		default:
+			headerValue = fmt.Sprintf("%v", v)
+		}
+		req.Header.Set(key, headerValue)
+	}
+}

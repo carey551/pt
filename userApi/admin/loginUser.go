@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"project/request"
+	"project/userApi"
 	"project/utils"
 )
 
@@ -21,15 +22,6 @@ type LoginRequest struct {
 // token的结构体
 type Config struct {
 	Token string `yaml:"token"`
-}
-
-// 定义与 JSON 结构对应的结构体
-type Response struct {
-	Data          interface{} `json:"data"`          // 使用 interface{} 处理 null
-	MsgParameters interface{} `json:"msgParameters"` // 使用 interface{} 处理 null
-	Code          int         `json:"code"`
-	Msg           string      `json:"msg"`
-	MsgCode       int         `json:"msgCode"`
 }
 
 // 商户后台的登录
@@ -62,7 +54,7 @@ func Login() error {
 
 	// fmt.Printf("用户%v登录成功--------------------+\n", loginData.UserName)
 	strResbody := string(respBody)
-	var response Response
+	var response userApi.Response
 	error := json.Unmarshal([]byte(strResbody), &response)
 	if error != nil {
 		fmt.Println(error)
