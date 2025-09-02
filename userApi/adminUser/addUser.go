@@ -1,4 +1,4 @@
-package userApi
+package adminUser
 
 import (
 	"fmt"
@@ -47,14 +47,9 @@ func AddUserRequest(userAmount string) {
 	requesPayload["signature"] = ""
 	requesPayload["timestamp"] = request.GetNowTime()
 
-	// 给请求投添加token
-	headPayload, err := AddHeaderToken()
-	if err != nil {
-		fmt.Println("添加头部token失败", err)
-		return
-	}
-
-	responBody, err := request.PostRequest(requesPayload, api, headPayload)
+	// 设置请求头，和获取token
+	headMap, base_url := GetHeaderUrl()
+	responBody, err := request.PostRequestCofig(requesPayload, base_url, api, headMap)
 	if err != nil {
 		fmt.Println("添加用户失败", err)
 		return

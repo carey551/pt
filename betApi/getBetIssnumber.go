@@ -3,6 +3,7 @@ package betApi
 import (
 	"encoding/json"
 	"fmt"
+	"project/common"
 	"project/request"
 	"time"
 )
@@ -24,10 +25,15 @@ type Response struct {
 }
 
 // 获取当期的期号
-func GetNowBetNumber() (map[string]interface{}, error) {
-	url := "https://h5.wmgametransit.com"
-	api := "/webapi/kv/issue/WinGo_5M"
-	resp, err := request.GetRequest(url, api)
+func GetNowBetNumber(token, betType string) (map[string]interface{}, error) {
+	api := "/webapi/kv/issue/" + betType
+	// 获取路径地址
+	var baseUrl common.CofingURL
+	base_url := baseUrl.ConfigUrlInit().Iss_URL
+	// 获取请求头
+	var issNumber common.GetIssNunmberHeaderConfig
+	headMap := issNumber.GetIssNunmberHeaderFunc(token, betType)
+	resp, err := request.GetRequest(base_url, api, headMap)
 	if err != nil {
 		fmt.Printf("%v", err)
 		return nil, err
@@ -50,8 +56,8 @@ func GetNowBetNumber() (map[string]interface{}, error) {
 }
 
 // 判断是否可以下注,并且返回期号
-func IsBet() (bool, string) {
-	nowBetNumber, err := GetNowBetNumber()
+func IsBet(token, betType string) (bool, string) {
+	nowBetNumber, err := GetNowBetNumber(token, betType)
 	if err != nil {
 		fmt.Println("没有成功获取到期号")
 		return false, "-1"
@@ -78,6 +84,6 @@ func IsBet() (bool, string) {
 		// 不可以投注
 		// 需要等待7s
 		time.Sleep(time.Second * 7)
-		return IsBet()
+		return IsBet(token, betType)
 	}
 }

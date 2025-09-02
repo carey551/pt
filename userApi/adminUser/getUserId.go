@@ -1,4 +1,4 @@
-package userApi
+package adminUser
 
 import (
 	"encoding/json"
@@ -50,13 +50,10 @@ func GetUserApi(account string) int64 {
 		"signature": userapiInit.Signature,
 		"timestamp": userapiInit.Timestamp,
 	}
-	// 添加toen在请求头
-	headPayload, err := AddHeaderToken()
-	if err != nil {
-		fmt.Println("添加头部token失败", err)
-		return -1
-	}
-	resp, err := request.PostRequest(userapiMap, api, headPayload)
+
+	// 设置请求头，和获取token
+	headMap, base_url := GetHeaderUrl()
+	resp, err := request.PostRequestCofig(userapiMap, base_url, api, headMap)
 	if err != nil {
 		fmt.Printf("获取用户的userid失败")
 		return -1

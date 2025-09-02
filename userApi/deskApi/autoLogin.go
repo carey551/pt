@@ -1,4 +1,4 @@
-package userApi
+package deskApi
 
 import (
 	"fmt"
@@ -42,8 +42,8 @@ func AutoLogin() {
 		"signature":           autologinData.Signature,
 		"timestamp":           autologinData.Timestamp,
 	}
-
-	response, err := request.PostRequestY1(autoPayload, api)
+	base_url := NewUserUrlFunc().userUrl
+	response, err := request.PostRequestCofig(autoPayload, base_url, api)
 	if err != nil {
 		fmt.Printf("自动登录接口的post请求失败", err)
 		return

@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -62,6 +63,73 @@ func GetSignature(body map[string]interface{}, verifyPwd *string) string {
 	return Md5Info(encoder, true)
 }
 
+func GetSignature2(body any, verifyPwd *string) string {
+	// 过滤字段并转换为 map 以便排序
+	filteredObj := make(map[string]interface{})
+	excludeKeys := map[string]bool{"signature": true, "timestamp": true, "track": true}
+
+	// 使用反射获取结构体字段
+	val := reflect.ValueOf(body)
+	typ := reflect.TypeOf(body)
+	for i := 0; i < val.NumField(); i++ {
+		field := typ.Field(i)
+		value := val.Field(i).Interface()
+		jsonTag := field.Tag.Get("json")
+		// 提取 JSON 字段名（忽略 ",omitempty" 部分）
+		key := jsonTag
+		if idx := len(jsonTag); idx > 9 && jsonTag[idx-9:] == ",omitempty" {
+			key = jsonTag[:idx-9]
+		}
+
+		// 过滤条件：非空值、不在排除列表中
+		if !excludeKeys[key] && !isEmpty(value) {
+			filteredObj[key] = value
+		}
+	}
+
+	// 按键排序
+	keys := make([]string, 0, len(filteredObj))
+	for key := range filteredObj {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	// 转换为 JSON 字符串
+	jsonData, err := json.Marshal(filteredObj)
+	if err != nil {
+		return "" // 错误处理
+	}
+
+	encoder := string(jsonData)
+	if verifyPwd != nil {
+		encoder += *verifyPwd
+	}
+
+	// 计算 MD5
+	return Md5Info(encoder, true)
+}
+
+// isEmpty 检查值是否为空（nil、零值或空字符串）
+func isEmpty(value interface{}) bool {
+	if value == nil {
+		return true
+	}
+	v := reflect.ValueOf(value)
+	switch v.Kind() {
+	case reflect.String:
+		return v.String() == ""
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Slice, reflect.Array, reflect.Map:
+		return v.Len() == 0
+	}
+	return false
+}
+
 // 用来解析请求
 func Unmarshal(strResbody string) (result map[string]interface{}) {
 	//是一个字符串
@@ -112,7 +180,7 @@ func WriteYAML(filePath string, data interface{}) error {
 func HandlerMap(strResbody string, str string) (string, error) {
 	var result map[string]interface{}
 	result = Unmarshal(strResbody)
-	fmt.Printf("解析结果%v", result)
+	// fmt.Printf("解析结果%v", result)
 	innerMap, ok := result["data"].(map[string]interface{})
 	if !ok {
 		// fmt.Println("data 不存在")

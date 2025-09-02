@@ -1,8 +1,9 @@
-package userApi
+package deskApi
 
 import (
 	"encoding/json"
 	"fmt"
+	"project/common"
 	"project/request"
 	"project/userApi"
 	"project/utils"
@@ -49,10 +50,12 @@ func UserloginY1(username, password string) (string, error) {
 		"signature":   userloginInit.Signature,
 		"timestamp":   userloginInit.Timestamp,
 	}
-
-	resp, err := request.PostRequestY1(userloginMap, api)
+	base_url := NewUserUrlFunc().userUrl
+	// 获取请求头
+	headMap := common.NewDeskHeaderConfig().DeskHeaderConfigFunc()
+	resp, err := request.PostRequestCofig(userloginMap, base_url, api, headMap)
 	if err != nil {
-		fmt.Printf("输入账号和密码登录的post请求失败")
+		fmt.Println("输入账号和密码登录的post请求失败")
 		return "输入账号和密码登录的post请求失败", err
 	}
 
@@ -68,6 +71,6 @@ func UserloginY1(username, password string) (string, error) {
 	if err != nil {
 		return "寻找token失败", err
 	}
-	fmt.Printf("token==>%v", token)
+	// fmt.Printf("token==>%v\n", token)
 	return token, nil
 }

@@ -1,9 +1,10 @@
-package userApi
+package adminUser
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"project/common"
 	"project/request"
 	"project/userApi"
 	"project/utils"
@@ -24,14 +25,17 @@ type Config struct {
 	Token string `yaml:"token"`
 }
 
-// 商户后台的登录
-func Login() error {
-
+/*
+*
+商户后台的登录
+username 商户后台的账号
+pwd 商户后台密码
+*/
+func Login(username, pwd string) error {
 	api := "/api/Login/Login"
-
 	loginData := LoginRequest{
-		UserName:  "carey3003",
-		Pwd:       "qwer1234",
+		UserName:  username,
+		Pwd:       pwd,
 		Language:  "zh",
 		Random:    request.RandmoNie(),
 		Signature: "",
@@ -46,7 +50,13 @@ func Login() error {
 		"signature": loginData.Signature,
 		"timestamp": loginData.Timestamp,
 	}
-	respBody, err := request.PostRequest(paylaodSignature, api)
+	var baseurl common.CofingURL
+	base_url := baseurl.ConfigUrlInit().ADMIN_URL
+	// 获取请求头
+	var head common.AdminHeaderConfig
+	headMap := head.AdminHeaderConfigFunc()
+	// respBody, err := request.PostRequest(paylaodSignature, api)
+	respBody, err := request.PostRequestCofig(paylaodSignature, base_url, api, headMap)
 	if err != nil {
 		fmt.Println(err)
 		return err

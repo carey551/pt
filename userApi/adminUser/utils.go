@@ -1,7 +1,8 @@
-package userApi
+package adminUser
 
 import (
 	"fmt"
+	"project/common"
 	"project/utils"
 )
 
@@ -14,12 +15,16 @@ type ConfigToken struct {
 	Token string
 }
 
+// 获取tonken
 func GetToken() (string, error) {
+	var common common.AdminUserName
+	username := common.AdminUserInit().UserName
+	pwd := common.AdminUserInit().Pwd
 	// 获取token
 	var config ConfigToken
 	err := utils.ReadYAML(Token_addr_yaml_local, &config)
 	if err != nil {
-		return "22222", fmt.Errorf("读取失败%v", err)
+		return "", fmt.Errorf("读取失败%v", err)
 	}
 	// fmt.Printf("读取的内容%v", config.Token)
 	n := 0
@@ -29,10 +34,10 @@ func GetToken() (string, error) {
 		}
 		if len(config.Token) == 0 {
 			//读取的内容是空的，就发送登录请求
-			err := Login()
+			err := Login(username, pwd)
 			if err != nil {
 				// fmt.Println(err)
-				return "1111", fmt.Errorf("Log的错误", err)
+				return "", err
 			}
 			return config.Token, nil
 		}
@@ -43,14 +48,17 @@ func GetToken() (string, error) {
 
 }
 
-// 为请求头添加token
-func AddHeaderToken() (map[string]interface{}, error) {
-	headPayload := make(map[string]interface{})
+// 对token的获取和请求头的封装
+func GetHeaderUrl() (map[string]interface{}, string) {
+	var baseurl common.CofingURL
+	base_url := baseurl.ConfigUrlInit().ADMIN_URL
+	// 获取token
 	token, err := GetToken()
 	if err != nil {
-		fmt.Printf("token获取失败%v", err)
-		return nil, err
+		fmt.Println(err)
+		return nil, ""
 	}
-	headPayload["Authorization"] = "Bearer " + token
-	return headPayload, nil
+	var head common.AdminHeaderAuthorizationConfig
+	headMap := head.AdminHeaderAuthorizationFunc(token)
+	return headMap, base_url
 }

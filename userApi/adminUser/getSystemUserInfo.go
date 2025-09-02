@@ -1,4 +1,4 @@
-package userApi
+package adminUser
 
 import (
 	"fmt"
@@ -29,13 +29,9 @@ func GetSystemUserInfo() {
 		"signature": getSysUserInfo.Signature,
 		"timestamp": getSysUserInfo.Timestamp,
 	}
-	headPayload, err := AddHeaderToken()
-	if err != nil {
-		fmt.Println("添加头部token失败", err)
-		return
-	}
-
-	respBody, err := request.PostRequest(payload, api, headPayload)
+	// 设置请求头，和获取token
+	headMap, base_url := GetHeaderUrl()
+	respBody, err := request.PostRequestCofig(payload, base_url, api, headMap)
 	if err != nil {
 		fmt.Println("请求GetSystemUserInfo出错", respBody)
 		return

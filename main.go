@@ -2,43 +2,61 @@ package main
 
 import (
 	"fmt"
-	_ "project/betApi"
+	"project/betApi"
 	"project/common"
-	_ "project/paymoneyapi"
-	_ "project/userApi"
+	payMoneyapi "project/payMoneyApi"
+	userApi "project/userApi/adminUser"
+	"project/userApi/deskApi"
 )
 
-func run() {
-
-	// userAmount := "918281997445"  // 需要添加的用户账号
-	// userApi.Login() // 商户后台登录
+/*
+后台启动 传入的账号是系统没有的账号
+userAmount string 传入一个账号进行充值
+moneny int64 充值金额
+*
+*/
+func adminRun(userAmount string, moneny int64) {
+	var common common.AdminUserName
+	username := common.AdminUserInit().UserName
+	pwd := common.AdminUserInit().Pwd
+	userApi.Login(username, pwd) // 商户后台登录
 	// userApi.AddUserRequest(userAmount) // 添加用户
-	// userid := userApi.GetUserApi(userAmount) // 获取用户id
-	// if userid == -1 {
-	// 	return
-	// }
-	// paymoneyapi.ManualRecharge(userid, 667, 0) // 用户充值
-	// result,err := userApi.UserloginY1(userAmount, "qwer1234")  // 前台登录 返回token值，后面的请求都需要这个token
-	// if err != nil {
-	// 	fmt.Println(result)
-	// 	return
-	// }
-	// tokenMap := map[string]string{
-	// 	"Authorization":result,
-	// }
-	// // 是否可以投注
-	// isBet, result := betApi.IsBet()
-	// if isBet && result != "-1" {
-	// 	// 可以投注
-	// 	fmt.Println("可以投注")
+	userid := userApi.GetUserApi(userAmount) // 获取用户id
+	if userid == -1 {
+		return
+	}
+	fmt.Println("userid:---->", userid)
+	payMoneyapi.ManualRecharge(userid, moneny, 0) // 用户充值
+}
 
-	// } else {
-	// 	return
-	// }
-	var config common.CofingURL
-	fmt.Print(config.ConfigFile().ADMIN_URL)
+/*
+前台启动
+userAmount string 传入登录的账号
+
+*
+*/
+func deskRun(userAmount string) {
+	betType := "WinGo_5M"                                      // 彩票类型
+	betContent := "BigSmall_Big"                               // 投注盘口
+	result, err := deskApi.UserloginY1(userAmount, "qwer1234") // 前台登录 返回token值，后面的请求都需要这个token
+	if err != nil {
+		fmt.Println(result)
+		return
+	}
+
+	// 是否可以投注
+	isBet, issNumber := betApi.IsBet("", betType)
+	if isBet && result != "-1" {
+		// 可以投注
+		betApi.BetWingo2(betType, 10, betContent, issNumber, result)
+	} else {
+		fmt.Println("不可以投注")
+		return
+	}
 }
 
 func main() {
-	run()
+	userAmount := "918281997445" // 需要添加的用户账号
+	// adminRun(userAmount, 778)
+	deskRun(userAmount)
 }

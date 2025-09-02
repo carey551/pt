@@ -3,7 +3,7 @@ package payMoneyapi
 import (
 	"fmt"
 	"project/request"
-	"project/userApi"
+	"project/userApi/adminUser"
 )
 
 // 人工充值
@@ -50,13 +50,9 @@ func ManualRecharge(userid, rechargeAmount int64, amountOfCode int8) {
 		"signature":              manualRechargeInit.Signature,
 		"timestamp":              manualRechargeInit.Timestamp,
 	}
-	// 获取token
-	headPayload, err := userApi.AddHeaderToken()
-	if err != nil {
-		fmt.Println("添加头部token失败", err)
-		return
-	}
-	resp, err := request.PostRequest(manualRechargedata, api, headPayload)
+
+	headMap, base_url := adminUser.GetHeaderUrl()
+	resp, err := request.PostRequestCofig(manualRechargedata, base_url, api, headMap)
 	if err != nil {
 		fmt.Println("人工充值发送请求失败")
 		return
