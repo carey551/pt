@@ -209,6 +209,6 @@ func GenerateCryptoRandomString(length int) string {
 	for i, b := range bytes {
 		bytes[i] = charset[b%byte(len(charset))]
 	}
-	fmt.Println("本次指纹", string(bytes))
+	// fmt.Println("本次指纹", string(bytes))
 	return string(bytes)
 }

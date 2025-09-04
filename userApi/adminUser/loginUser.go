@@ -56,7 +56,7 @@ func Login(username, pwd string) error {
 	var head common.AdminHeaderConfig
 	headMap := head.AdminHeaderConfigFunc()
 	// respBody, err := request.PostRequest(paylaodSignature, api)
-	respBody, err := request.PostRequestCofig(paylaodSignature, base_url, api, headMap)
+	respBody, _, err := request.PostRequestCofig(paylaodSignature, base_url, api, headMap)
 	if err != nil {
 		fmt.Println(err)
 		return err

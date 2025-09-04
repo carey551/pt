@@ -1,13 +1,10 @@
 package betApi
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
+	"project/common"
 	"project/request"
-	"project/utils"
-	"time"
 )
 
 // BetRequest 定义请求体的结构体
@@ -23,97 +20,50 @@ type BetRequest struct {
 	Timestamp   int64  `json:"timestamp"`
 }
 
+type ResponseStruct struct {
+	Code        int8
+	Msg         string
+	MsgCode     int8
+	ServiceTime int64
+}
+
 /*
 *
 gameCode  彩票投注种类
-amount 投注金额
+amount 投注金额 = 单个金额 * 倍率
+betMultiple 投注倍率
 betContent 投注盘口
 issueNumber 期号
 token token对象
 */
-func BetWingo(gameCode string, amount int64, betContent, issueNumber, token string) {
-	fmt.Println("请求了新的请求")
-	// api := "/api/Lottery/WinGoBet"
+func BetWingo(gameCode string, amount, betMultiple int, betContent, issueNumber, token, username string) {
+	// 请求体地址
+	api := "/api/Lottery/WinGoBet"
 	// url := "https://sit-lotteryh5.wmgametransit.com"
-	url := "https://sit-lotteryh5.wmgametransit.com/api/Lottery/WinGoBet"
-	// 创建请求体
-	bet := BetRequest{
-		GameCode:    gameCode,
-		IssueNumber: issueNumber,
-		Amount:      int(amount),
-		BetMultiple: 1,
-		BetContent:  betContent,
-		Language:    "en",
-		Random:      request.RandmoNie(),
-		Signature:   "",
-		Timestamp:   request.GetNowTime(),
-	}
-	verfiy := ""
-	signalVal := utils.GetSignature2(bet, &verfiy)
-	bet2 := BetRequest{
-		GameCode:    gameCode,
-		IssueNumber: issueNumber,
-		Amount:      int(amount),
-		BetMultiple: 1,
-		BetContent:  betContent,
-		Language:    "en",
-		Random:      bet.Random,
-		Signature:   signalVal,
-		Timestamp:   bet.Timestamp,
-	}
-	// 将请求体序列化为 JSON
-	body, err := json.Marshal(bet2)
+	url := common.LOTTERY_H5
+	// 参数化
+	bet := &BetRequest{}
+	betResultList := []interface{}{gameCode, issueNumber, amount, betMultiple, betContent, "en", request.RandmoNie(), "", request.GetNowTime()}
+	resultMap := common.InitStructToMap(bet, betResultList)
+	// 获取请求头
+	deskA := &common.BetTokenStruct{}
+	url_h5 := common.WMG_H5
+	desSlice := []interface{}{url_h5, url_h5, token}
+	headMap, _ := common.AssignSliceToStructMap(deskA, desSlice)
+	respBody, _, err := request.PostRequestCofig(resultMap, url, api, headMap)
 	if err != nil {
-		fmt.Println("序列化请求体失败:", err)
+		fmt.Println(err)
 		return
 	}
-
-	// 创建 HTTP 请求
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	var res ResponseStruct
+	err = json.Unmarshal([]byte(string(respBody)), &res)
 	if err != nil {
-		fmt.Println("创建请求失败:", err)
+		fmt.Println("投注的反序列失败", err)
 		return
 	}
-
-	// 设置请求头
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36")
-	req.Header.Set("Accept", "application/json, text/plain, */*")
-	req.Header.Set("Content-Type", "application/problem+json; charset=UTF-8")
-	req.Header.Set("sec-ch-ua-platform", `"Windows"`)
-	req.Header.Set("sec-ch-ua", `"Not;A=Brand";v="99", "Google Chrome";v="139", "Chromium";v="139"`)
-	req.Header.Set("sec-ch-ua-mobile", "?0")
-	req.Header.Set("Origin", "https://h5.wmgametransit.com")
-	req.Header.Set("Sec-Fetch-Site", "same-site")
-	req.Header.Set("Sec-Fetch-Mode", "cors")
-	req.Header.Set("Sec-Fetch-Dest", "empty")
-	req.Header.Set("Referer", "https://h5.wmgametransit.com/")
-	req.Header.Set("Accept-Encoding", "gzip, deflate, br, zstd")
-	req.Header.Set("Accept-Language", "en-GB,en-US;q=0.9,en;q=0.8")
-
-	// 创建 HTTP 客户端并设置超时
-	client := &http.Client{
-		Timeout: 10 * time.Second,
+	code := res.Code
+	msgcode := res.MsgCode
+	if code == 0 && msgcode == 0 {
+		fmt.Printf("%v在%v投注了%v成功", username, gameCode, amount*betMultiple)
 	}
-
-	// 发送请求
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println("发送请求失败:", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	// 打印响应状态
-	fmt.Println("响应状态:", resp.Status)
-
-	// 可选：打印响应体
-	var respBody bytes.Buffer
-	_, err = respBody.ReadFrom(resp.Body)
-	if err != nil {
-		fmt.Println("读取响应体失败:", err)
-		return
-	}
-	fmt.Println("响应体:", respBody.String())
-
 }

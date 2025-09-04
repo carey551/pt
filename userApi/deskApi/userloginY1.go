@@ -53,7 +53,7 @@ func UserloginY1(username, password string) (string, error) {
 	base_url := NewUserUrlFunc().userUrl
 	// 获取请求头
 	headMap := common.NewDeskHeaderConfig().DeskHeaderConfigFunc()
-	resp, err := request.PostRequestCofig(userloginMap, base_url, api, headMap)
+	resp, _, err := request.PostRequestCofig(userloginMap, base_url, api, headMap)
 	if err != nil {
 		fmt.Println("输入账号和密码登录的post请求失败")
 		return "输入账号和密码登录的post请求失败", err
@@ -72,5 +72,6 @@ func UserloginY1(username, password string) (string, error) {
 		return "寻找token失败", err
 	}
 	// fmt.Printf("token==>%v\n", token)
+	fmt.Printf("%s登录成功--------------------------------------------", username)
 	return token, nil
 }

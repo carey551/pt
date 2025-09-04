@@ -11,6 +11,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"net/url"
 	"project/utils"
 	"time"
 )
@@ -20,15 +21,22 @@ import (
 url 请求地址
 api 接口
 args[0] 添加额外的请求头设置
+args[1] 添加参数
 */
-func GetRequest(url, api string, args ...map[string]interface{}) ([]byte, error) {
-	urlapi := url + api
+func GetRequest(base_url, api string, args ...map[string]interface{}) ([]byte, *http.Response, error) {
+	urlapi := base_url + api
+	// 携带了参数需要设置参数
+	if len(args[1]) > 0 {
+		params := url.Values{}
+		par := setGetParms(&params, args[1])
+		urlapi = urlapi + "?" + par.Encode()
+	}
+	// fmt.Println("添加了参数的url---》", urlapi)
 	// 创建 GET 请求
 	req, err := http.NewRequest("GET", urlapi, nil)
 	if err != nil {
 		log.Fatalf("创建请求失败: %v", err)
 	}
-
 	// 设置请求头
 	if len(args) > 0 {
 		setHeaders(req, args[0])
@@ -44,7 +52,7 @@ func GetRequest(url, api string, args ...map[string]interface{}) ([]byte, error)
 	if err != nil {
 		// fmt.Println("发送get请求失败")
 		err := errors.New("发送get请求失败")
-		return nil, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 	return handlerCode(resp)
@@ -57,9 +65,9 @@ base_url 请求地址
 api 接口地址
 args[0] 添加自定义请求头 map[string]interface{}
 */
-func PostRequestCofig(payload map[string]interface{}, base_url, api string, args ...map[string]interface{}) ([]byte, error) {
+func PostRequestCofig(payload map[string]interface{}, base_url, api string, args ...map[string]interface{}) ([]byte, *http.Response, error) {
 	url := base_url + api
-	fmt.Printf("本次请求的地址%v\n", url)
+	// fmt.Printf("本次请求的地址%v\n", url)
 	// 判断传进来的paylaod是否有签名，没有就添加上
 	_, exists := payload["signature"]
 	if !exists {
@@ -96,28 +104,28 @@ func PostRequestCofig(payload map[string]interface{}, base_url, api string, args
 	client := checkHttp2()
 
 	// 打印所有请求头
-	fmt.Println("请求头:")
-	for key, values := range req.Header {
-		for _, value := range values {
-			fmt.Printf("%s: %s\n", key, value)
-		}
-	}
+	// fmt.Println("请求头:")
+	// for key, values := range req.Header {
+	// 	for _, value := range values {
+	// 		fmt.Printf("%s: %s\n", key, value)
+	// 	}
+	// }
 	//发送请求
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatalf("发送请求失败~~~~~~~： %v", err)
-		return nil, err
+		log.Fatalf("发送请求失败~~~~~~~: %v", err)
+		return nil, nil, err
 	}
 
 	defer resp.Body.Close()
-
-	fmt.Println("响应状态码", resp.StatusCode)
-	respBody, err := handlerCode(resp)
+	// fmt.Println("响应状态码", resp.StatusCode)
+	respBody, resp, err := handlerCode(resp)
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return nil, nil, err
 	}
-	return respBody, nil
+
+	return respBody, resp, nil
 }
 
 // 设置请求头
@@ -137,27 +145,44 @@ func setHeaders(req *http.Request, headers map[string]interface{}) {
 	}
 }
 
+// 设置get参数
+func setGetParms(params *url.Values, paramsMap map[string]interface{}) url.Values {
+	for key, value := range paramsMap {
+		var paramsValue string
+		switch v := value.(type) {
+		case string:
+			paramsValue = v
+		case fmt.Stringer:
+			paramsValue = v.String()
+		default:
+			paramsValue = fmt.Sprintf("%v", v)
+		}
+		params.Add(key, paramsValue)
+	}
+	return *params
+}
+
 // 响应码的处理
-func handlerCode(resp *http.Response) ([]byte, error) {
+func handlerCode(resp *http.Response) ([]byte, *http.Response, error) {
 	if resp.StatusCode == 200 {
 		//获取相应的内容
 		respBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			log.Fatalf("读取响应失败：%v", err)
 		}
-		return respBody, nil
+		return respBody, resp, nil
 
 	} else if resp.StatusCode >= 300 && resp.StatusCode < 400 {
 		//
 		errString := errors.New("状态码300-400")
-		return nil, errString
+		return nil, resp, errString
 	} else if resp.StatusCode >= 400 && resp.StatusCode < 500 {
 		//需要身份验证,或者需要
 		errString := errors.New("需要身份验证,或者需要")
-		return nil, errString
+		return nil, resp, errString
 	} else {
 		err := errors.New("状态码不是200~~或者是服务器错误~~~")
-		return nil, err
+		return nil, nil, err
 	}
 }
 
@@ -183,7 +208,7 @@ func checkHttp2() *http.Client {
 func GetNowTime() int64 {
 	now := time.Now()
 	timestampMicro := now.Unix()
-	fmt.Println("当前时间戳", timestampMicro)
+	// fmt.Println("当前时间戳", timestampMicro)
 	return timestampMicro
 }
 
@@ -196,6 +221,6 @@ func RandmoNie() int64 {
 		return -1
 	}
 	random_number := n.Int64() + 100000000000
-	fmt.Println("生成的随机数", random_number)
+	// fmt.Println("生成的随机数", random_number)
 	return random_number
 }

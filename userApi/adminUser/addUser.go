@@ -49,7 +49,7 @@ func AddUserRequest(userAmount string) {
 
 	// 设置请求头，和获取token
 	headMap, base_url := GetHeaderUrl()
-	responBody, err := request.PostRequestCofig(requesPayload, base_url, api, headMap)
+	responBody, _, err := request.PostRequestCofig(requesPayload, base_url, api, headMap)
 	if err != nil {
 		fmt.Println("添加用户失败", err)
 		return

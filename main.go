@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"project/betApi"
+	"project/betApi/winGo"
 	"project/common"
 	payMoneyapi "project/payMoneyApi"
 	userApi "project/userApi/adminUser"
@@ -36,19 +37,22 @@ userAmount string 传入登录的账号
 *
 */
 func deskRun(userAmount string) {
-	betType := "WinGo_5M"                                      // 彩票类型
+	gameCode := "WinGo_5M"                                     // 彩票类型
 	betContent := "BigSmall_Big"                               // 投注盘口
 	result, err := deskApi.UserloginY1(userAmount, "qwer1234") // 前台登录 返回token值，后面的请求都需要这个token
 	if err != nil {
 		fmt.Println(result)
 		return
 	}
-
+	// if len(result) > 0 {
+	// 	winGo.ThirdGameFunc(result, gameCode)
+	// }
+	BalanceToken := winGo.GetBalanceInfoFunc(result, gameCode)
 	// 是否可以投注
-	isBet, issNumber := betApi.IsBet("", betType)
+	isBet, issNumber := betApi.IsBet("", gameCode)
 	if isBet && result != "-1" {
 		// 可以投注
-		betApi.BetWingo2(betType, 10, betContent, issNumber, result)
+		betApi.BetWingo(gameCode, 10, 2, betContent, issNumber, BalanceToken, userAmount)
 	} else {
 		fmt.Println("不可以投注")
 		return
@@ -59,4 +63,5 @@ func main() {
 	userAmount := "918281997445" // 需要添加的用户账号
 	// adminRun(userAmount, 778)
 	deskRun(userAmount)
+	// betApi.BetWingo("WinGo_5M", 10, 2, "BigSmall_Big", "123344331", "77777")
 }

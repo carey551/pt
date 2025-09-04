@@ -33,14 +33,15 @@ func GetNowBetNumber(token, betType string) (map[string]interface{}, error) {
 	// 获取请求头
 	var issNumber common.GetIssNunmberHeaderConfig
 	headMap := issNumber.GetIssNunmberHeaderFunc(token, betType)
-	resp, err := request.GetRequest(base_url, api, headMap)
+	k := make(map[string]interface{})
+	respBody, _, err := request.GetRequest(base_url, api, headMap, k)
 	if err != nil {
 		fmt.Printf("%v", err)
 		return nil, err
 	}
 	// fmt.Printf("响应期号%v", string(resp))
 	var response Response
-	error := json.Unmarshal([]byte(string(resp)), &response)
+	error := json.Unmarshal([]byte(string(respBody)), &response)
 	if error != nil {
 		fmt.Printf("响应期号解析失败%v", error)
 		return nil, error
@@ -65,17 +66,17 @@ func IsBet(token, betType string) (bool, string) {
 	// startTime := nowBetNumber["startTime"].(int64)
 	endTime := nowBetNumber["endTime"].(int64)
 	issueNumber := nowBetNumber["issueNumber"]
-	intervalMinute := nowBetNumber["intervalMinute"].(int64)
+	// intervalMinute := nowBetNumber["intervalMinute"].(int64)
 	// fmt.Println("结束 - 开始", endTime-startTime)
 	// 获取当前时间
 	now := time.Now()
 
 	// 获取时间戳（秒）
 	secTimestamp := now.UnixMilli()
-	fmt.Printf("当前时间戳（秒）: %d\n", secTimestamp)
-	fmt.Println("结束时间", endTime)
+	// fmt.Printf("当前时间戳（秒）: %d\n", secTimestamp)
+	// fmt.Println("结束时间", endTime)
 
-	fmt.Printf("间隔时间%v,%v\n", intervalMinute*1000, endTime-secTimestamp)
+	// fmt.Printf("间隔时间%v,%v\n", intervalMinute*1000, endTime-secTimestamp)
 	// 结束时间 - 当前时间 >= 动画7s
 	if endTime-secTimestamp >= 7000 {
 		// 可以投注

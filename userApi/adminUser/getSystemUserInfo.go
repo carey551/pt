@@ -31,7 +31,7 @@ func GetSystemUserInfo() {
 	}
 	// 设置请求头，和获取token
 	headMap, base_url := GetHeaderUrl()
-	respBody, err := request.PostRequestCofig(payload, base_url, api, headMap)
+	respBody, _, err := request.PostRequestCofig(payload, base_url, api, headMap)
 	if err != nil {
 		fmt.Println("请求GetSystemUserInfo出错", respBody)
 		return

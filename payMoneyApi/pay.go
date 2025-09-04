@@ -52,7 +52,7 @@ func ManualRecharge(userid, rechargeAmount int64, amountOfCode int8) {
 	}
 
 	headMap, base_url := adminUser.GetHeaderUrl()
-	resp, err := request.PostRequestCofig(manualRechargedata, base_url, api, headMap)
+	resp, _, err := request.PostRequestCofig(manualRechargedata, base_url, api, headMap)
 	if err != nil {
 		fmt.Println("人工充值发送请求失败")
 		return

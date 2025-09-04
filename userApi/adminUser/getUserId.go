@@ -53,7 +53,7 @@ func GetUserApi(account string) int64 {
 
 	// 设置请求头，和获取token
 	headMap, base_url := GetHeaderUrl()
-	resp, err := request.PostRequestCofig(userapiMap, base_url, api, headMap)
+	resp, _, err := request.PostRequestCofig(userapiMap, base_url, api, headMap)
 	if err != nil {
 		fmt.Printf("获取用户的userid失败")
 		return -1
